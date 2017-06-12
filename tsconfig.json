@@ -1,0 +1,9 @@
+{
+   "compileOnSave": true,
+   "compilerOptions": {
+       "noImplicitAny" : true,
+        "target": "es5",
+        "module": "none",
+        "outFile": "loco-client.js"
+   }
+}
