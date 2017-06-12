@@ -1,2 +1,3 @@
 # loco.client
-Javascript client for Loco
+
+Javascript client for `loco.server`
