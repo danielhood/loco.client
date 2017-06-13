@@ -1,18 +1,25 @@
-/// <reference path="keyhook.ts" />
+/// <reference path="commands/keyhook.ts" />
+/// <reference path="commands/commandProcessor.ts" />
+/// <reference path="stores/objectStore.ts" />
+/// <reference path="stores/currentUserStore.ts" />
+/// <reference path="renderers/objectRenderer.ts" />
+
 
 namespace LocoClient {
   var mainCanvas: HTMLCanvasElement;
-  var ctx: CanvasRenderingContext2D;
   var msgText: HTMLDivElement;
   var cmdText: HTMLDivElement;
   var msgBuffer: string;
-  var cmdBuffer: string;
-  var keyShift: boolean = false;
 
-  var x: number = 0;
-  var y: number = 0;
+  let currentUserStore = new CurrentUserStore(
+    {Id: "1", Username: "admin", FirstName: "admin", LastName: "admin", IsOnline: true, X: 0, Y: 0}
+  );
 
-  var keyHook = new KeyHook(processCommand, renderText);
+  let objectStore = new ObjectStore();
+
+  var objectRenderer: ObjectRenderer;
+  var commandProcessor: CommandProcessor;
+  var keyHook: KeyHook;
 
   var showObject = false;
 
@@ -22,71 +29,34 @@ namespace LocoClient {
     mainCanvas.width = window.innerWidth;
     mainCanvas.height = window.innerHeight - 100;
 
-    ctx = mainCanvas.getContext("2d");
+    objectRenderer = new ObjectRenderer(mainCanvas, objectStore, currentUserStore);
+
+    commandProcessor = new CommandProcessor(
+      () => objectRenderer.renderAll(),
+      renderTextWithMsg, objectStore, currentUserStore);
 
     msgText = <HTMLDivElement>document.getElementById("msgText");
-
     cmdText = <HTMLDivElement>document.getElementById("cmdText");
+
     msgText.style.width = cmdText.style.width = window.innerWidth.toString();
 
-    msgBuffer = "loco-cli v0.1";
+    keyHook = new KeyHook(
+      () => renderText(),
+      (cmd: string) => commandProcessor.processCommand(cmd));
 
     keyHook.hook();
 
-    renderCanvas();
-    renderText();
+    renderTextWithMsg("loco-cli v0.1; User logged in: " + currentUserStore.getUser().Username);
   }
 
-  function processCommand(command: string) {
-    if (command == "draw") {
-      showObject = true;
-      renderCanvas();
-    }
-    else if (command == "clear") {
-      showObject = false;
-      renderCanvas();
-    }
-    else if (command == "left") {
-      x = x-1;
-      renderCanvas();
-    }
-    else if (command == "right") {
-      x = x+1;
-      renderCanvas();
-    }
-    else if (command == "up") {
-      y = y-1;
-      renderCanvas();
-    }
-    else if (command == "down") {
-      y = y+1;
-      renderCanvas();
-    }
-    else if (command == "help") {
-      msgBuffer = "Commands: help, draw, clear, left, right, up, down"
-      renderText();
-    }
-    else {
-      msgBuffer = "Unknown command: " + command;
-      renderText();
-    }
+  function renderTextWithMsg(msg: string) {
+    msgBuffer = msg;
+    renderText();
   }
 
   function renderText() {
     msgText.innerText = msgBuffer;
     cmdText.innerText = keyHook.cmdBuffer;
-  }
-
-  function renderCanvas() {
-    ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-
-    if (showObject) {
-      ctx.beginPath();
-      ctx.moveTo(x,y);
-      ctx.lineTo(200+x,100+y);
-      ctx.stroke();
-    }
-
   }
 
 }

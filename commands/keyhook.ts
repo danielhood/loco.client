@@ -1,17 +1,17 @@
 namespace LocoClient {
+  type RenderCommandTextCallback = () => any;
   type ProcessCommandCallback = (cmd: string) => any;
-  type RenderCommandCallback = () => any;
   type MapKeycodeCall = (k: number) => any;
 
   export class KeyHook {
       cmdBuffer: string;
+      renderCommandTextCallback: RenderCommandTextCallback;
       processCommandCallback: ProcessCommandCallback;
-      renderCommandCallback: RenderCommandCallback;
 
-      constructor(processCommandCallback: ProcessCommandCallback, renderCommandCallback: RenderCommandCallback) {
+      constructor(renderCommandTextCallback: RenderCommandTextCallback, processCommandCallback: ProcessCommandCallback) {
         this.cmdBuffer = "> ";
+        this.renderCommandTextCallback = renderCommandTextCallback;
         this.processCommandCallback = processCommandCallback;
-        this.renderCommandCallback = renderCommandCallback;
       }
 
       //mapKeycode (k: number) : void {
@@ -25,8 +25,10 @@ namespace LocoClient {
           this.cmdBuffer = "> ";
           return;
         }
-        else if (k == 8 && this.cmdBuffer.length > 2) {
-          this.cmdBuffer = this.cmdBuffer.substr(0, this.cmdBuffer.length - 1);
+        else if (k == 8) {
+          if (this.cmdBuffer.length > 2) {
+            this.cmdBuffer = this.cmdBuffer.substr(0, this.cmdBuffer.length - 1);
+          }
         }
         else if (k == 27) {
           this.cmdBuffer = "> ";
@@ -56,7 +58,7 @@ namespace LocoClient {
 
       keyHandler(e: KeyboardEvent) {
         this.mapKeycode(e.keyCode);
-        this.renderCommandCallback();
+        this.renderCommandTextCallback();
       }
 
   }
